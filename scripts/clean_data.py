@@ -1,20 +1,38 @@
 import pandas as pd
+import os
 
-# Load raw data file
-df = pd.read_csv("./data/easy_equities_mock.csv")
+RAW_FOLDER = "./data/raw"
+PROCESSSED_FILE = "./data/processed/cleaned_data.csv"
 
-# Create clean column names
-df.columns = df.columns.str.strip().str.lower()
+all_data = []
 
-# Convert type: date
-df["date"] = pd.to_datetime(df["date"])
+# Loop all data files 
+for file in os.listdir(RAW_FOLDER):
+    if file.endswith(".csv"): 
+        print("Processing:", file)
 
-# Convert type: numeric
-df["price"] = pd.to_numeric(df["price"])
-df["quantity"] = pd.to_numeric(df["quantity"])
-df["total_value"] = pd.to_numeric(df["total_value"])
+        path = os.path.join(RAW_FOLDER, file)
+        df = pd.read_csv(path)
+
+    # Create clean column names
+    df.columns = df.columns.str.strip().str.lower()
+
+    # Convert type: date
+    df["date"] = pd.to_datetime(df["date"])
+
+    # Convert type: numeric
+    df["price"] = pd.to_numeric(df["price"])
+    df["quantity"] = pd.to_numeric(df["quantity"])
+    df["total_value"] = pd.to_numeric(df["total_value"])
+
+    # Add all the data to list
+    all_data.append(df)
+
+# Combine the data
+final_df = pd.concat(all_data, ignore_index=True)
+final_df = final_df.sort_values("date").drop_duplicates()
 
 # Save cleand data
-df.to_csv("./data/cleaned_data.csv", index=False)
+final_df.to_csv(PROCESSSED_FILE, index=False)
 
-print("Data cleaned successfully!")
+print("Pipeline completed!")

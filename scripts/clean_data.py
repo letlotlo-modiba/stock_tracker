@@ -25,6 +25,9 @@ for file in os.listdir(RAW_FOLDER):
     df["quantity"] = pd.to_numeric(df["quantity"])
     df["total_value"] = pd.to_numeric(df["total_value"])
 
+    # Net value calculation
+    df["net_value"] = df.apply(lambda x: x["total_value"] if x["transaction_type"] == "BUY" else -x["total_value"], axis=1)
+
     # Add all the data to list
     all_data.append(df)
 

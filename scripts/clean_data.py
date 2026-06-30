@@ -1,8 +1,10 @@
 import pandas as pd
 import os
+import sqlite3
 
 RAW_FOLDER = "./data/raw"
 PROCESSSED_FILE = "./data/processed/cleaned_data.csv"
+DB_FILE = "data/stocks.db"
 
 all_data = []
 
@@ -37,5 +39,12 @@ final_df = final_df.sort_values("date").drop_duplicates()
 
 # Save cleand data
 final_df.to_csv(PROCESSSED_FILE, index=False)
+
+# Save to database
+connection = sqlite3.connect(DB_FILE)
+final_df.to_sql("transactions", connection, if_exists="replace", index=False)
+connection.close()
+
+print("Data saved to database!")
 
 print("Pipeline completed!")

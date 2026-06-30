@@ -4,7 +4,7 @@ import sqlite3
 
 RAW_FOLDER = "./data/raw"
 PROCESSSED_FILE = "./data/processed/cleaned_data.csv"
-DB_FILE = "data/stocks.db"
+DB_FILE = "./data/stocks.db"
 
 all_data = []
 
@@ -15,6 +15,9 @@ for file in os.listdir(RAW_FOLDER):
 
         path = os.path.join(RAW_FOLDER, file)
         df = pd.read_csv(path)
+
+        # Debug
+        # print("Rows in file:", len(df))
 
     # Create clean column names
     df.columns = df.columns.str.strip().str.lower()
@@ -35,6 +38,11 @@ for file in os.listdir(RAW_FOLDER):
 
 # Combine the data
 final_df = pd.concat(all_data, ignore_index=True)
+
+# Debug
+# print("TOTAL ROWS AFTER COMBINE:", len(final_df))
+# print(final_df["date"].min(), "=>", final_df["date"].max())
+
 final_df = final_df.sort_values("date").drop_duplicates()
 
 # Save cleand data

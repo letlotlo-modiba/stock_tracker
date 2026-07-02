@@ -17,7 +17,6 @@ ORDER BY date
 portfolio_df = pd.read_sql(query, connection)
 portfolio_df["cumulative"] = portfolio_df["daily_value"].cumsum()
 
-print(portfolio_df.head())
 
 # Profit per stock
 query = """

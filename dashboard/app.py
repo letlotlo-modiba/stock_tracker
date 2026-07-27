@@ -53,6 +53,13 @@ end_date = st.sidebar.date_input(
     value=portfolio_df["date"].max()
 )
 
+# Stock Filter
+stocks = st.sidebar.multiselect(
+    "Select Stocks", 
+    options=profit_df["stock"].unique(),
+    default=profit_df["stock"].unique()
+)
+
 # Filter data
 filtered_df = portfolio_df[
     (portfolio_df["date"] >= pd.to_datetime(start_date)) &
@@ -65,7 +72,6 @@ total_investment = filtered_df["daily_value"][filtered_df["daily_value"] > 0].su
 best_stock = profit_df.iloc[0]["stock"]
 
 col1, col2, col3 = st.columns(3)
-
 col1.metric("💰 Total Investment", f"R{total_investment:,.2f}")
 col2.metric("📈 Total Profit", f"R{total_profit:,.2f}")
 col3.metric("🏆 Best Stock", best_stock)
@@ -105,3 +111,12 @@ fig3 = px.bar(
 )
 
 st.plotly_chart(fig3, use_container_width=True)
+
+# --- Insight ---
+st.subheader("Insights")
+st.write(f"Best performing stock: **{best_stock}**")
+st.write(f"Total portfolio value: **R{total_profit:,.2f}**")
+
+# --- Table View ---
+st.subheader("Raw Data")
+st.dataframe(filtered_df)

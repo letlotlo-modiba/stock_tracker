@@ -1,58 +1,118 @@
-import pandas as pd
 import os
 import sqlite3
+from pathlib import Path
+import pandas as pd
 
-RAW_FOLDER = "./data/raw"
-PROCESSSED_FILE = "./data/processed/cleaned_data.csv"
-DB_FILE = "./data/stocks.db"
+# Define base paths relative to this script so it runs from any directory
+BASE_DIR = Path(__file__).resolve().parent.parent
+RAW_FOLDER = BASE_DIR / "data" / "raw"
+PROCESSED_FILE = BASE_DIR / "data" / "processed" / "cleaned_data.csv"
+DB_FILE = BASE_DIR / "data" / "stocks.db"
 
-all_data = []
 
-# Loop all data files 
-for file in os.listdir(RAW_FOLDER):
-    if file.endswith(".csv"): 
-        print("Processing:", file)
+def clean_and_ingest():
+    # Ensure directories exist
+    RAW_FOLDER.mkdir(parents=True, exist_ok=True)
+    PROCESSED_FILE.parent.mkdir(parents=True, exist_ok=True)
+    DB_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-        path = os.path.join(RAW_FOLDER, file)
-        df = pd.read_csv(path)
+    csv_files = [f for f in os.listdir(RAW_FOLDER) if f.endswith(".csv")]
 
-        # Debug
-        # print("Rows in file:", len(df))
+    if not csv_files:
+        print(f"⚠️ No CSV files found in {RAW_FOLDER}")
+        print("Please place your transaction CSV files in the data/raw/ directory.")
+        return
 
-    # Create clean column names
-    df.columns = df.columns.str.strip().str.lower()
+    all_data = []
 
-    # Convert type: date
-    df["date"] = pd.to_datetime(df["date"])
+    # Loop through all CSV files in the raw folder
+    for file in sorted(csv_files):
+        print(f"Processing: {file}")
+        path = RAW_FOLDER / file
 
-    # Convert type: numeric
-    df["price"] = pd.to_numeric(df["price"])
-    df["quantity"] = pd.to_numeric(df["quantity"])
-    df["total_value"] = pd.to_numeric(df["total_value"])
+        try:
+            df = pd.read_csv(path)
+            if df.empty:
+                print(f"  Skipping empty file: {file}")
+                continue
 
-    # Net value calculation
-    df["net_value"] = df.apply(lambda x: x["total_value"] if x["transaction_type"] == "BUY" else -x["total_value"], axis=1)
+            # Standardize column headers: lowercase and stripped of whitespace
+            df.columns = df.columns.str.strip().str.lower()
 
-    # Add all the data to list
-    all_data.append(df)
+            # Optional mapping for common alternative column names
+            col_rename = {
+                "share": "stock",
+                "ticker": "stock",
+                "share / etf": "stock",
+                "action": "transaction_type",
+                "type": "transaction_type",
+                "shares": "quantity",
+                "amount": "total_value",
+                "total": "total_value",
+            }
+            df = df.rename(columns={k: v for k, v in col_rename.items() if k in df.columns})
 
-# Combine the data
-final_df = pd.concat(all_data, ignore_index=True)
+            # Verify required columns exist
+            required_cols = {"date", "stock", "transaction_type", "price", "quantity"}
+            missing_cols = required_cols - set(df.columns)
+            if missing_cols:
+                print(f"  Warning: {file} is missing required columns: {missing_cols}. Skipping.")
+                continue
 
-# Debug
-# print("TOTAL ROWS AFTER COMBINE:", len(final_df))
-# print(final_df["date"].min(), "=>", final_df["date"].max())
+            # Convert type: date
+            df["date"] = pd.to_datetime(df["date"])
 
-final_df = final_df.sort_values("date").drop_duplicates()
+            # Clean and standardize transaction_type (BUY / SELL)
+            df["transaction_type"] = df["transaction_type"].astype(str).str.strip().str.upper()
 
-# Save cleand data
-final_df.to_csv(PROCESSSED_FILE, index=False)
+            # Clean and convert numeric types
+            df["price"] = pd.to_numeric(df["price"], errors="coerce")
+            df["quantity"] = pd.to_numeric(df["quantity"], errors="coerce")
 
-# Save to database
-connection = sqlite3.connect(DB_FILE)
-final_df.to_sql("transactions", connection, if_exists="replace", index=False)
-connection.close()
+            # Calculate total_value if missing or null
+            if "total_value" not in df.columns or df["total_value"].isna().all():
+                df["total_value"] = df["price"] * df["quantity"]
+            else:
+                df["total_value"] = pd.to_numeric(df["total_value"], errors="coerce").fillna(
+                    df["price"] * df["quantity"]
+                )
 
-print("Data saved to database!")
+            # Drop any rows where critical fields could not be parsed
+            df = df.dropna(subset=["date", "stock", "price", "quantity", "total_value"])
 
-print("Pipeline completed!")
+            # Net value calculation: BUY is positive (cash invested), SELL is negative (cash returned)
+            df["net_value"] = df.apply(
+                lambda x: x["total_value"] if x["transaction_type"] == "BUY" else -x["total_value"],
+                axis=1,
+            )
+
+            all_data.append(df)
+
+        except Exception as e:
+            print(f"  Error processing {file}: {e}")
+
+    if not all_data:
+        print("❌ No valid transaction data found across CSV files.")
+        return
+
+    # Combine all individual statements
+    final_df = pd.concat(all_data, ignore_index=True)
+
+    # Sort chronologically and remove exact duplicate records
+    final_df = final_df.sort_values("date").drop_duplicates()
+
+    # Save cleaned data to CSV
+    final_df.to_csv(PROCESSED_FILE, index=False)
+    print(f"✅ Cleaned data ({len(final_df)} rows) saved to {PROCESSED_FILE}")
+
+    # Save to SQLite database
+    connection = sqlite3.connect(DB_FILE)
+    final_df.to_sql("transactions", connection, if_exists="replace", index=False)
+    connection.close()
+
+    print(f"✅ Data saved to database: {DB_FILE}")
+    print("🚀 Data cleaning & ingestion pipeline completed successfully!")
+
+
+if __name__ == "__main__":
+    clean_and_ingest()

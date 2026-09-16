@@ -1,153 +1,290 @@
-# Stock Tracker
+# 📈 Stock Tracker
 
-**Stock Tracker** is a Python-based financial portfolio tracking and analytics application designed to clean, ingest, analyze, and visualize stock market investments, with dedicated support for Johannesburg Stock Exchange (JSE) securities quoted in South African Rands (ZAR).
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
+[![Framework](https://img.shields.io/badge/framework-Streamlit-red.svg)](https://streamlit.io/)
+[![Data Pipeline](https://img.shields.io/badge/data-Pandas%20%7C%20SQLite-green.svg)](https://pandas.pydata.org/)
+[![Visualizations](https://img.shields.io/badge/charts-Plotly-purple.svg)](https://plotly.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**Stock Tracker** is a Python-based financial portfolio tracking and analytics application designed to clean, ingest, analyze, and visualize stock investments — with dedicated support for Johannesburg Stock Exchange (JSE) securities quoted in South African Rand (ZAR).
 
 ---
 
-## Table of Contents
+## 📑 Table of Contents
+
 - [About the Project](#-about-the-project)
 - [Key Features](#-key-features)
-- [Required Libraries & Toolkits](#-required-libraries--toolkits)
 - [Project Architecture](#-project-architecture)
-- [Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-- [Usage & Pipeline Workflow](#-usage--pipeline-workflow)
-  - [1. Data Cleaning & Database Ingestion](#1-data-cleaning--database-ingestion)
+- [Database Schema](#-database-schema)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+- [How to Add Your Own Data](#-how-to-add-your-own-data)
+- [Usage Workflow](#-usage-workflow)
+  - [1. Clean Data & Ingest into Database](#1-clean-data--ingest-into-database)
   - [2. Fetch Live Market Prices](#2-fetch-live-market-prices)
-  - [3. Running SQL Analytical Queries](#3-running-sql-analytical-queries)
-  - [4. Launching the Interactive Dashboard](#4-launching-the-interactive-dashboard)
+  - [3. Run Terminal Analytics](#3-run-terminal-analytics)
+  - [4. Launch Interactive Web Dashboard](#4-launch-interactive-web-dashboard)
+- [Dashboard Capabilities](#-dashboard-capabilities)
+- [Current Status & Roadmap](#-current-status--roadmap)
+- [Troubleshooting & FAQ](#-troubleshooting--faq)
 - [License](#-license)
 
 ---
 
-## About the Project
+## 🚀 About the Project
 
-Managing personal stock portfolios across multiple trade logs and monthly statements can be challenging. **Stock Tracker** provides an automated data pipeline that:
-1. Aggregates raw monthly transaction CSV files (BUYS and SELLS).
-2. Calculates net cash flows, cumulative investment growth, and per-stock profits.
-3. Automatically fetches live stock market prices via Yahoo Finance.
-4. Handles unit conversions (e.g., converting JSE prices quoted in South African Cents `ZAc` into Rands `ZAR`).
-5. Displays real-time portfolio performance, asset allocation, and metrics through a web dashboard.
+Managing personal stock portfolios across multiple trade statements and monthly CSV exports (such as EasyEquities, brokers, or trading journals) is often fragmented, manual, and error-prone.
 
----
-
-## Key Features
-
-- **Automated Data Pipeline**: Scans raw transaction logs (`.csv`), cleans headers, parses dates, and computes transaction net values.
-- **SQLite Database Persistence**: Stores transaction records and market data efficiently in a local SQLite database (`stocks.db`).
-- **Live Market Price Fetching**: Integrates with Yahoo Finance (`yfinance`) to fetch real-time closing prices for JSE tickers (e.g., `NPN.JO`, `MTN.JO`, `SHP.JO`).
-- **Interactive Web Dashboard**: Built with Streamlit and Plotly for visual analytics:
-  - **KPI Metrics**: Total Investment, Historical Profit, Live Portfolio Value, Live Profit.
-  - **Dynamic Filters**: Filter data by custom date ranges and specific stock selections.
-  - **Interactive Charts**: Portfolio growth line charts, daily gain/loss bar charts, stock profit rankings, and asset distribution pie charts.
-  - **Data Inspection**: Expandable table view to inspect raw processed datasets.
-- **Exploratory Data Analysis**: Includes a Jupyter Notebook (`notebook/analysis.ipynb`) for custom analysis.
+**Stock Tracker** solves this by delivering an end-to-end data pipeline:
+1. **Aggregates and standardizes** raw monthly transaction CSV statements.
+2. **Cleans, validates, and normalizes** trade logs, calculating net cash invested and trade totals.
+3. **Persists data locally** in a structured, zero-configuration SQLite database (`data/stocks.db`).
+4. **Fetches live market valuations** via Yahoo Finance (`yfinance`), automatically converting JSE cent quotations (`ZAc`) into Rands (`ZAR`).
+5. **Renders an interactive dashboard** via Streamlit and Plotly for real-time portfolio performance, asset allocation, and historical trend analytics.
 
 ---
 
-## Required Libraries & Toolkits
+## ✨ Key Features
 
-This project relies on the Python 3 ecosystem and the following libraries:
-
-| Library / Toolkit | Version / Type | Purpose |
-| :--- | :--- | :--- |
-| **Python 3.8+** | Runtime | Core programming language |
-| **[Pandas](https://pandas.pydata.org/)** | Library | Data cleaning, manipulation, time-series conversion, and database I/O |
-| **[SQLite3](https://docs.python.org/3/library/sqlite3.html)** | Standard Library | Relational database engine for storing transaction logs & market prices |
-| **[yfinance](https://github.com/ranaroussi/yfinance)** | Library | Fetches real-time and historical financial market data from Yahoo Finance |
-| **[Streamlit](https://streamlit.io/)** | Framework | Powers the interactive web dashboard interface |
-| **[Plotly](https://plotly.com/python/)** | Library | Renders dynamic, responsive charts (line, bar, pie) on the dashboard |
-| **[Jupyter](https://jupyter.org/)** | Toolkit | Interactive notebook environment for data analysis (`analysis.ipynb`) |
+- 📂 **Automated Data Cleaning Pipeline**: Consolidates multiple CSVs, strips whitespace, parses date formats, handles case normalization, and computes signed net transaction values (`BUY` vs. `SELL`).
+- 🗄️ **Embedded SQLite Database**: Automatically initializes and manages tables (`transactions` and `market_data`) with no external database server needed.
+- 🌍 **Live JSE Market Synchronization**: Direct integration with Yahoo Finance for real-time closing prices across JSE equities (e.g. `NPN.JO`, `MTN.JO`, `SHP.JO`, `CPI.JO`, `PRX.JO`).
+- 📊 **Interactive Web Dashboard**:
+  - **KPI Cards**: Total Purchases, Net Capital Invested, Live Portfolio Market Value, and Unrealized Profit / ROI %.
+  - **Interactive Visualizations**: Cumulative portfolio growth over time, daily net capital flow (buys vs. sells), capital allocation per stock, and portfolio distribution pie chart.
+  - **Dynamic Filters**: Real-time filtering by customizable date ranges and individual stock selections.
+  - **Data Inspection**: Expandable tabs to examine filtered raw transactions and active stock holdings.
+- 📓 **Exploratory Data Analysis**: Includes a Jupyter Notebook (`notebook/analysis.ipynb`) for deep-dive exploratory data analysis.
 
 ---
 
-## Project Architecture
+## 🧱 Project Architecture
 
 ```
 stock_tracker/
+├── app.py                  # Root Streamlit dashboard entrypoint
 ├── dashboard/
-│   └── app.py              # Streamlit web application & Plotly visualizations
+│   └── app.py              # Streamlit dashboard & Plotly charts
 ├── data/
-│   ├── raw/                # Raw transaction CSV files (e.g., jan_mock.csv, feb_mock.csv)
-│   ├── processed/          # Cleaned dataset output (cleaned_data.csv)
-│   └── stocks.db           # SQLite database storing 'transactions' & 'market_data' tables
+│   ├── raw/                # Raw transaction CSV files (EasyEquities statement drops)
+│   ├── processed/          # Cleaned, consolidated dataset (cleaned_data.csv)
+│   └── stocks.db           # SQLite database storing transactions & market prices
 ├── notebook/
-│   └── analysis.ipynb      # Jupyter notebook for exploratory data analysis
+│   └── analysis.ipynb      # Jupyter Notebook for exploratory analysis
 ├── scripts/
-│   ├── clean_data.py       # Pipeline script to clean CSVs & save to SQLite DB
-│   ├── fetch_market_data.py# Script to fetch live market prices via yfinance
-│   └── query_data.py       # SQL query script to extract performance summaries
+│   ├── clean_data.py       # Data cleaning, normalization & SQLite ingestion
+│   ├── fetch_market_data.py# Fetches real-time closing prices via yfinance
+│   └── query_data.py       # CLI SQL analytical summaries & reports
+├── .gitignore              # Git ignore rules for environments & caches
+├── requirements.txt        # Project dependencies
 ├── LICENSE                 # MIT License
 └── README.md               # Project documentation
 ```
 
 ---
 
-## Getting Started
+## 🗃️ Database Schema
 
-### Prerequisites
+The SQLite database (`data/stocks.db`) is automatically initialized upon running `scripts/clean_data.py`. It consists of two relational tables:
 
-Ensure you have **Python 3.8** or higher installed on your system.
+### 1. `transactions` Table
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `date` | `TEXT` / `DATETIME` | Date of execution (`YYYY-MM-DD`) |
+| `stock` | `TEXT` | Stock name or ticker symbol (e.g. `Naspers`, `MTN`) |
+| `transaction_type` | `TEXT` | `BUY` or `SELL` |
+| `price` | `REAL` | Execution price per share in ZAR |
+| `quantity` | `REAL` | Number of shares transacted |
+| `total_value` | `REAL` | Total transaction amount (`price * quantity`) |
+| `net_value` | `REAL` | Signed cashflow (`+total_value` for BUY, `-total_value` for SELL) |
 
-### Installation
-
-1. **Clone or navigate to the repository**:
-   ```bash
-   cd stock_tracker
-   ```
-
-2. **Create and activate a virtual environment** *(optional but recommended)*:
-   ```bash
-   # On Linux/macOS
-   python3 -m venv .venv
-   source .venv/bin/activate
-
-   # On Windows
-   python -m venv .venv
-   .venv\Scripts\activate
-   ```
-
-3. **Install the required dependencies**:
-   ```bash
-   pip install pandas yfinance streamlit plotly jupyter
-   ```
+### 2. `market_data` Table
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `stock` | `TEXT` | Stock identifier matching `transactions.stock` |
+| `current_price` | `REAL` | Latest market price in ZAR (converted from cents if JSE) |
 
 ---
 
-## Usage & Pipeline Workflow
+## ⚙️ Prerequisites
 
-Follow these steps to process your trade data and run the dashboard:
+- **Python 3.8+** (Python 3.10, 3.11, and 3.12 fully supported)
+- **pip** package manager
+- Active internet connection (for fetching live stock prices from Yahoo Finance)
 
-### 1. Data Cleaning & Database Ingestion
-Place your raw transaction CSV files inside the `data/raw/` folder, then run:
+---
+
+## 📦 Installation
+
+Clone the repository and set up a Python virtual environment:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-username/stock_tracker.git
+cd stock_tracker
+
+# 2. Create a virtual environment
+python3 -m venv .venv
+
+# 3. Activate the virtual environment
+# On Linux/macOS:
+source .venv/bin/activate
+
+# On Windows (Command Prompt / PowerShell):
+.venv\Scripts\activate
+
+# 4. Install all dependencies
+pip install -r requirements.txt
+```
+
+---
+
+## 📥 How to Add Your Own Data
+
+You can add your own trade data from brokers such as **EasyEquities** or custom trade logs.
+
+### 1. Where to Place CSV Files
+Drop your raw CSV transaction files directly into the `data/raw/` directory:
+```
+data/raw/
+├── jan_mock.csv
+├── feb_mock.csv
+└── my_easyequities_statement.csv
+```
+
+### 2. Required CSV Format
+Files must include the following column headers (case-insensitive and tolerant to common aliases):
+
+| Required Header | Accepted Aliases | Example Value | Description |
+| :--- | :--- | :--- | :--- |
+| `date` | `Date`, `Transaction Date` | `2024-01-15` | Date of trade |
+| `stock` | `Stock`, `Share`, `Share / ETF`, `Ticker` | `Shoprite` | Name or symbol of stock |
+| `transaction_type` | `Transaction Type`, `Action`, `Type` | `BUY` or `SELL` | Trade action |
+| `price` | `Price`, `Execution Price` | `265.50` | Share price in ZAR |
+| `quantity` | `Quantity`, `Shares`, `Qty` | `10` | Quantity of shares traded |
+| `total_value` | `Total Value`, `Amount`, `Total` | `2655.00` | *(Optional)* Calculated as `price * quantity` if omitted |
+
+#### Sample CSV Snippet (`data/raw/sample_trades.csv`):
+```csv
+date,stock,transaction_type,price,quantity,total_value
+2024-01-02,Naspers,BUY,3200,1,3200
+2024-01-03,MTN,BUY,120,5,600
+2024-01-04,Shoprite,BUY,250,2,500
+2024-01-06,MTN,SELL,125,2,250
+```
+
+---
+
+## 🔄 Usage Workflow
+
+Run the pipeline using the following step-by-step commands:
+
+### 1. Clean Data & Ingest into Database
+Parses and standardizes all CSV files in `data/raw/`, cleans fields, generates `data/processed/cleaned_data.csv`, and writes records to `data/stocks.db`:
 ```bash
 python scripts/clean_data.py
 ```
-*This script cleans column names, converts dates and numeric fields, calculates net transaction values, saves `cleaned_data.csv` to `data/processed/`, and populates the `transactions` table in `data/stocks.db`.*
+*Output: `Cleaned data saved to data/processed/cleaned_data.csv and SQLite database!`*
 
 ### 2. Fetch Live Market Prices
-Fetch the latest stock closing prices from Yahoo Finance:
+Connects to Yahoo Finance (`yfinance`) to fetch current closing market prices for all unique stocks in your portfolio:
 ```bash
 python scripts/fetch_market_data.py
 ```
-*This updates the `market_data` table in `data/stocks.db` with live prices (converting JSE prices from cents to Rands).*
+*Output: Automatically maps stocks to JSE tickers (e.g. `Naspers` -> `NPN.JO`), converts ZAc cents to ZAR Rands, and populates the `market_data` table.*
 
-### 3. Running SQL Analytical Queries
-To run quick SQL summary queries in the terminal:
+### 3. Run Terminal Analytics
+Run quick SQL aggregations directly from the command line:
 ```bash
 python scripts/query_data.py
 ```
+*Generates summary reports for:*
+- Portfolio cumulative growth over recent dates
+- Total bought, total sold, and net cash invested per stock
+- Current market valuations
 
-### 4. Launching the Interactive Dashboard
-Launch the Streamlit web dashboard:
+### 4. Launch Interactive Web Dashboard
+Start the Streamlit analytics dashboard:
 ```bash
-streamlit run dashboard/app.py
+streamlit run app.py
 ```
-Open your browser at `http://localhost:8501` to view your portfolio analytics.
+*(Alternatively: `streamlit run dashboard/app.py`)*
+
+Open your browser at **`http://localhost:8501`** to interact with the dashboard.
 
 ---
 
-## License
+## 📊 Dashboard Capabilities
 
-This project is licensed under the [MIT License](LICENSE).
+| Feature | Description |
+| :--- | :--- |
+| 🎛️ **Sidebar Date Range Filter** | Dynamically zoom into any historical timeframe |
+| 🏷️ **Multi-Stock Filter** | Isolate specific securities to analyze focused performance |
+| 💳 **KPI Metrics** | High-level summary of total capital invested, realized sales, market value, and unrealized profit |
+| 📈 **Portfolio Growth Chart** | Interactive Plotly line graph of cumulative investment trajectory |
+| 📊 **Daily Cash Flow** | Bar chart highlighting net daily inflows (purchases) vs outflows (sales) |
+| 💰 **Capital Allocated per Stock** | Visual ranking of total capital exposure per equity |
+| 🥧 **Asset Allocation Breakdown** | Donut chart displaying live portfolio distribution by holding value |
+| 🏆 **Automated Insights Banner** | Highlights the top-performing asset and current unrealized return |
+| 📄 **Data Inspector** | Expandable data table view of filtered transactions and live market holdings |
+
+---
+
+## 🛣️ Current Status & Roadmap
+
+### ✅ Completed
+- [x] Multi-CSV ingestion pipeline with date & column normalization
+- [x] Fault-tolerant data cleaning (handles missing totals, varying column headers)
+- [x] Embedded SQLite database integration (`data/stocks.db`)
+- [x] Live market price synchronization via Yahoo Finance (`yfinance`)
+- [x] JSE currency conversion (`ZAc` cents to `ZAR` Rands)
+- [x] Interactive web dashboard with Streamlit and Plotly
+- [x] Dynamic filtering by date range and stock selection
+- [x] Asset allocation distribution chart and top-performer highlights
+- [x] Command-line SQL analytical query script
+- [x] Comprehensive exploratory data analysis notebook (`notebook/analysis.ipynb`)
+- [x] Dependency management (`requirements.txt`) and `.gitignore` configuration
+
+### 🚧 In Progress
+- [ ] Automated daily market price sync via background cron or scheduled tasks
+- [ ] Dividend tracking and dividend reinvestment yield calculations
+- [ ] Multi-currency support (e.g. USD and GBP alongside ZAR)
+
+### 🔮 Future Plans
+- [ ] Benchmark comparison against the FTSE/JSE Top 40 Index (`^J200`)
+- [ ] REST API backend powered by FastAPI
+- [ ] Docker containerization for one-click deployment
+- [ ] Automated weekly portfolio summary email alerts
+
+---
+
+## ❓ Troubleshooting & FAQ
+
+<details>
+<summary><b>1. Error: "No such table: transactions" or "stocks.db not found"</b></summary>
+Run the data cleaning script first to initialize the database:
+```bash
+python scripts/clean_data.py
+```
+Ensure you have at least one valid `.csv` file in `data/raw/`.
+</details>
+
+<details>
+<summary><b>2. Live prices are showing as 0 or not displaying</b></summary>
+Ensure you have run the market data fetcher:
+```bash
+python scripts/fetch_market_data.py
+```
+Check that your machine has internet access so `yfinance` can query Yahoo Finance.
+</details>
+
+<details>
+<summary><b>3. How do I map a new JSE stock ticker?</b></summary>
+Open `scripts/fetch_market_data.py` and add your stock name and corresponding Yahoo Finance ticker to the `TICKER_MAP` dictionary (e.g. `"Capitec": "CPI.JO"`).
+</details>
+
+---
+
+## 📄 License
+
+This project is open-source and licensed under the [MIT License](LICENSE).

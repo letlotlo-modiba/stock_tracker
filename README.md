@@ -285,6 +285,8 @@ Open `scripts/fetch_market_data.py` and add your stock name and corresponding Ya
 
 ---
 
+Verification Code: WTC-L7GSS5LP
+
 ## 📄 License
 
 This project is open-source and licensed under the [MIT License](LICENSE).
